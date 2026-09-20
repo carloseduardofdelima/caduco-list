@@ -19,6 +19,13 @@ model Game {
   platform   String    @default("PS2")
   tags       String[]  @default([])
   isJapanOnly Boolean   @default(false)
+  summary    String?
+  storyline  String?
+  developer  String?
+  publisher  String?
+  releaseYear Int?
+  screenshots String[]  @default([])
+  videoUrl   String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }

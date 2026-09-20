@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createGame, updateGame, deleteGame, updateGameStatus, logoutAdmin } from "@/app/actions";
-import { Plus, Edit2, Trash2, Search, Star, LogOut, Disc, Tag, Globe, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, Star, LogOut, Disc, Tag, Globe, X, Image as ImageIcon, Info } from "lucide-react";
 import { Status } from "@prisma/client";
 
 interface Game {
@@ -16,6 +16,13 @@ interface Game {
   igdbId?: string | null;
   tags?: string[];
   isJapanOnly?: boolean;
+  summary?: string | null;
+  storyline?: string | null;
+  developer?: string | null;
+  publisher?: string | null;
+  releaseYear?: number | null;
+  screenshots?: string[];
+  videoUrl?: string | null;
 }
 
 interface AdminDashboardClientProps {
@@ -66,6 +73,12 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
   const [formTags, setFormTags] = useState<string[]>([]);
   const [customTagInput, setCustomTagInput] = useState("");
   const [formIsJapanOnly, setFormIsJapanOnly] = useState(false);
+  const [formSummary, setFormSummary] = useState("");
+  const [formDeveloper, setFormDeveloper] = useState("");
+  const [formPublisher, setFormPublisher] = useState("");
+  const [formReleaseYear, setFormReleaseYear] = useState("");
+  const [formScreenshotsText, setFormScreenshotsText] = useState("");
+  const [formScreenshots, setFormScreenshots] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   function resetForm() {
@@ -80,6 +93,12 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
     setFormTags([]);
     setCustomTagInput("");
     setFormIsJapanOnly(false);
+    setFormSummary("");
+    setFormDeveloper("");
+    setFormPublisher("");
+    setFormReleaseYear("");
+    setFormScreenshotsText("");
+    setFormScreenshots([]);
     setApiResults([]);
     setIsFormOpen(false);
   }
@@ -100,6 +119,12 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
     setFormIgdbId(game.igdbId || "");
     setFormTags(game.tags || []);
     setFormIsJapanOnly(Boolean(game.isJapanOnly));
+    setFormSummary(game.summary || "");
+    setFormDeveloper(game.developer || "");
+    setFormPublisher(game.publisher || "");
+    setFormReleaseYear(game.releaseYear ? String(game.releaseYear) : "");
+    setFormScreenshots(game.screenshots || []);
+    setFormScreenshotsText((game.screenshots || []).join("\n"));
     setCustomTagInput("");
     setIsFormOpen(true);
   }
@@ -129,6 +154,14 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
     if (typeof item.isJapanOnly === "boolean") {
       setFormIsJapanOnly(item.isJapanOnly);
     }
+    if (item.summary) setFormSummary(item.summary);
+    if (item.developer) setFormDeveloper(item.developer);
+    if (item.publisher) setFormPublisher(item.publisher);
+    if (item.releaseYear) setFormReleaseYear(String(item.releaseYear));
+    if (Array.isArray(item.screenshots) && item.screenshots.length > 0) {
+      setFormScreenshots(item.screenshots);
+      setFormScreenshotsText(item.screenshots.join("\n"));
+    }
     setApiResults([]);
   }
 
@@ -153,6 +186,12 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
     e.preventDefault();
     setIsSaving(true);
     try {
+      // Processa screenshots da textarea
+      const parsedScreenshots = formScreenshotsText
+        .split("\n")
+        .map((s) => s.trim())
+        .filter((s) => s.startsWith("http"));
+
       const payload = {
         title: formTitle,
         coverUrl: formCoverUrl || undefined,
@@ -163,6 +202,11 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
         igdbId: formIgdbId || null,
         tags: formTags,
         isJapanOnly: formIsJapanOnly,
+        summary: formSummary || null,
+        developer: formDeveloper || null,
+        publisher: formPublisher || null,
+        releaseYear: formReleaseYear ? Number(formReleaseYear) : null,
+        screenshots: parsedScreenshots.length > 0 ? parsedScreenshots : formScreenshots,
       };
 
       if (editingGame) {
@@ -233,7 +277,7 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
             Painel de Gerenciamento PS2
           </h1>
           <p className="text-xs text-slate-400">
-            Adicione novos jogos, consulte capas, gerencie tags e configure exclusividades do Japão.
+            Adicione novos jogos, consulte capas, gerencie tags, screenshots e exclusividades do Japão.
           </p>
         </div>
 
@@ -273,12 +317,12 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
           {/* Busca de Metadados / Capa na API */}
           <div className="p-4 rounded-xl bg-blue-950/30 border border-cyan-900/40 space-y-3">
             <label className="block text-xs font-semibold text-cyan-300">
-              Buscar Informações, Capa e Tags Automaticamente
+              Buscar Informações, Capa, Screenshots e Tags Automaticamente
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Ex: God of War, Initial D, Silent Hill 2, Berserk..."
+                placeholder="Ex: God of War, Initial D, Silent Hill 2, Berserk, GTA San Andreas..."
                 value={apiSearchTerm}
                 onChange={(e) => setApiSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleSearchApi())}
@@ -368,7 +412,7 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
                     Jogo Exclusivo do Japão (Japan Only / NTSC-J)
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    Marque caso este jogo tenha sido lançado apenas no mercado japonês (sem lançamento ocidental).
+                    Marque caso este jogo tenha sido lançado apenas no mercado japonês.
                   </span>
                 </div>
               </div>
@@ -467,6 +511,76 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
               </div>
             </div>
 
+            {/* Metadados Avançados: Desenvolvedora, Publicadora e Ano */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Desenvolvedora (Developer)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Capcom, Konami, Rockstar..."
+                  value={formDeveloper}
+                  onChange={(e) => setFormDeveloper(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Publicadora (Publisher)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Sony, Capcom, EA..."
+                  value={formPublisher}
+                  onChange={(e) => setFormPublisher(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Ano de Lançamento
+                </label>
+                <input
+                  type="number"
+                  placeholder="Ex: 2004"
+                  value={formReleaseYear}
+                  onChange={(e) => setFormReleaseYear(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+            </div>
+
+            {/* Sinopse / Sobre o Jogo */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Sinopse / Sobre o Jogo
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Descrição geral da história, enredo e gameplay do jogo..."
+                value={formSummary}
+                onChange={(e) => setFormSummary(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-100 focus:outline-none focus:border-cyan-400"
+              />
+            </div>
+
+            {/* Screenshots de Gameplay */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-slate-300">
+                Screenshots de Gameplay (Uma URL por linha)
+              </label>
+              <textarea
+                rows={3}
+                placeholder="https://images.igdb.com/...&#10;https://..."
+                value={formScreenshotsText}
+                onChange={(e) => setFormScreenshotsText(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs text-slate-100 font-mono placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+              />
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
@@ -483,7 +597,7 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Nota (0 a 10)
+                  Nota Pessoal (0 a 10)
                 </label>
                 <input
                   type="number"
@@ -511,11 +625,11 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Anotações e Memórias
+                Minhas Anotações & Memórias
               </label>
               <textarea
-                rows={3}
-                placeholder="Observações pessoais sobre a gameplay, memórias nostálgicas..."
+                rows={2}
+                placeholder="Observações pessoais sobre sua gameplay, memórias nostálgicas..."
                 value={formNotes}
                 onChange={(e) => setFormNotes(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-100 focus:outline-none focus:border-cyan-400"

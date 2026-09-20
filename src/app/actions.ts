@@ -33,6 +33,13 @@ export async function createGame(data: {
   igdbId?: string | null;
   tags?: string[];
   isJapanOnly?: boolean;
+  summary?: string | null;
+  storyline?: string | null;
+  developer?: string | null;
+  publisher?: string | null;
+  releaseYear?: number | null;
+  screenshots?: string[];
+  videoUrl?: string | null;
 }) {
   const isAuth = await verifySession();
   if (!isAuth) {
@@ -51,6 +58,13 @@ export async function createGame(data: {
       platform: "PS2",
       tags: data.tags || [],
       isJapanOnly: data.isJapanOnly ?? false,
+      summary: data.summary || null,
+      storyline: data.storyline || null,
+      developer: data.developer || null,
+      publisher: data.publisher || null,
+      releaseYear: data.releaseYear ? Number(data.releaseYear) : null,
+      screenshots: data.screenshots || [],
+      videoUrl: data.videoUrl || null,
     },
   });
 
@@ -71,6 +85,13 @@ export async function updateGame(
     igdbId?: string | null;
     tags?: string[];
     isJapanOnly?: boolean;
+    summary?: string | null;
+    storyline?: string | null;
+    developer?: string | null;
+    publisher?: string | null;
+    releaseYear?: number | null;
+    screenshots?: string[];
+    videoUrl?: string | null;
   }
 ) {
   const isAuth = await verifySession();
@@ -90,6 +111,13 @@ export async function updateGame(
       igdbId: data.igdbId || null,
       tags: data.tags !== undefined ? data.tags : undefined,
       isJapanOnly: data.isJapanOnly !== undefined ? data.isJapanOnly : undefined,
+      summary: data.summary !== undefined ? data.summary : undefined,
+      storyline: data.storyline !== undefined ? data.storyline : undefined,
+      developer: data.developer !== undefined ? data.developer : undefined,
+      publisher: data.publisher !== undefined ? data.publisher : undefined,
+      releaseYear: data.releaseYear !== undefined ? (data.releaseYear ? Number(data.releaseYear) : null) : undefined,
+      screenshots: data.screenshots !== undefined ? data.screenshots : undefined,
+      videoUrl: data.videoUrl !== undefined ? data.videoUrl : undefined,
     },
   });
 

@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Capas oficiais extraídas diretamente da IGDB oficial (t_cover_big com box art de PS2 completa)
+  // Capas e screenshots oficiais da IGDB
   const games = [
     {
       title: "Grand Theft Auto: San Andreas",
@@ -15,6 +15,16 @@ async function main() {
       platform: "PS2",
       tags: ["Ação", "Mundo Aberto", "Tiro"],
       isJapanOnly: false,
+      developer: "Rockstar North",
+      publisher: "Rockstar Games",
+      releaseYear: 2004,
+      summary: "Cinco anos atrás, Carl Johnson fugiu das pressões de Los Santos, San Andreas... uma cidade à beira do colapso com gangues, drogas e corrupção. No início dos anos 90, CJ precisa voltar para casa. Sua mãe foi assassinada, sua família desmoronou e seus amigos de infância estão à beira do desastre.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88f2.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88f3.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88f1.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88ez.jpg",
+      ],
     },
     {
       title: "Silent Hill 2",
@@ -26,6 +36,16 @@ async function main() {
       platform: "PS2",
       tags: ["Terror", "Sobrevivência", "Psicológico"],
       isJapanOnly: false,
+      developer: "Team Silent",
+      publisher: "Konami",
+      releaseYear: 2001,
+      summary: "James Sunderland recebe uma misteriosa carta de sua falecida esposa Mary, pedindo para que ele a encontre em seu 'lugar especial' na enevoada e silenciosa cidade de Silent Hill.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc84s4.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc84s5.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc84s6.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc84s7.jpg",
+      ],
     },
     {
       title: "Shadow of the Colossus",
@@ -37,6 +57,16 @@ async function main() {
       platform: "PS2",
       tags: ["Ação", "Aventura", "Puzzle"],
       isJapanOnly: false,
+      developer: "Team Ico / SCE Japan Studio",
+      publisher: "Sony Computer Entertainment",
+      releaseYear: 2005,
+      summary: "Wander entra na terra proibida montado em seu cavalo Agro para ressuscitar a jovem Mono, desafiando e escalando dezesseis colossos monumentais.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc89k2.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc89k3.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc89k4.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc89k5.jpg",
+      ],
     },
     {
       title: "Need for Speed: Underground 2",
@@ -48,6 +78,14 @@ async function main() {
       platform: "PS2",
       tags: ["Corrida", "Arcade", "Mundo Aberto"],
       isJapanOnly: false,
+      developer: "EA Black Box",
+      publisher: "EA Games",
+      releaseYear: 2004,
+      summary: "Explore a cidade de Bayview, tune dezenas de carros icônicos com personalização profunda e domine os eventos de drift, drag e sprint.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88t4.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88t5.jpg",
+      ],
     },
     {
       title: "God of War II",
@@ -59,6 +97,15 @@ async function main() {
       platform: "PS2",
       tags: ["Ação", "Hack and Slash", "Aventura"],
       isJapanOnly: false,
+      developer: "Santa Monica Studio",
+      publisher: "Sony Computer Entertainment",
+      releaseYear: 2007,
+      summary: "Kratos, traído por Zeus, parte em uma jornada lendária através do tempo para desafiar o destino e destruir o Olimpo.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc6o05.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc6o06.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc6o07.jpg",
+      ],
     },
     {
       title: "Initial D: Special Stage",
@@ -70,6 +117,15 @@ async function main() {
       platform: "PS2",
       tags: ["Corrida", "Arcade", "Anime"],
       isJapanOnly: true,
+      developer: "Sega Rosso",
+      publisher: "Sega",
+      releaseYear: 2003,
+      summary: "Exclusivo do PlayStation 2 no Japão! Corridas touge em alta velocidade nas montanhas de Akina, Myogi e Usui com Takumi Fujiwara no lendário Toyota Sprinter Trueno AE86, ao som de Eurobeat autêntico.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc80e6.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc80e7.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc80e8.jpg",
+      ],
     },
     {
       title: "Berserk: Millennium Falcon Hen Seima Senki no Shou",
@@ -81,6 +137,15 @@ async function main() {
       platform: "PS2",
       tags: ["Hack and Slash", "Ação", "Anime"],
       isJapanOnly: true,
+      developer: "Yuke's",
+      publisher: "Sammy Corporation",
+      releaseYear: 2004,
+      summary: "Adaptação de PS2 lançada exclusivamente no mercado japonês. Cobre os eventos brutais do mangá de Kentaro Miura da Guerra Santa e do Falcão Milenar com a trilha sonora épica de Susumu Hirasawa e combate intenso com a Dragon Slayer.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88f5.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88f6.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88f7.jpg",
+      ],
     },
     {
       title: "Namco x Capcom",
@@ -92,6 +157,14 @@ async function main() {
       platform: "PS2",
       tags: ["RPG", "Estratégia", "Tático"],
       isJapanOnly: true,
+      developer: "Monolith Soft",
+      publisher: "Namco",
+      releaseYear: 2005,
+      summary: "Crossover lendário de RPG Tático exclusivo de PS2 no Japão que junta personagens icônicos de franquias como Street Fighter, Darkstalkers, Tekken, Soulcalibur, Megaman, Tales of e Strider.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc8b25.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc8b26.jpg",
+      ],
     },
     {
       title: "Metal Gear Solid 3: Snake Eater",
@@ -103,6 +176,14 @@ async function main() {
       platform: "PS2",
       tags: ["Furtividade", "Ação", "Tiro"],
       isJapanOnly: false,
+      developer: "Kojima Productions / Konami",
+      publisher: "Konami",
+      releaseYear: 2004,
+      summary: "Passado em 1964 nas profundezas da selva da União Soviética. Naked Snake deve infiltrar-se em território inimigo para resgatar o cientista Sokolov e destruir a superarma Shagohod.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc86w2.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc86w3.jpg",
+      ],
     },
     {
       title: "Tekken 5",
@@ -114,6 +195,14 @@ async function main() {
       platform: "PS2",
       tags: ["Luta", "Arcade"],
       isJapanOnly: false,
+      developer: "Namco",
+      publisher: "Namco",
+      releaseYear: 2005,
+      summary: "Considerado o ápice da franquia no PS2, Tekken 5 introduziu Jinpachi Mishima, novos lutadores como Raven, Feng Wei e Asuka Kazama, além do modo Devil Within.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc81v1.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc81v2.jpg",
+      ],
     },
     {
       title: "Devil May Cry 3: Dante's Awakening",
@@ -125,6 +214,14 @@ async function main() {
       platform: "PS2",
       tags: ["Hack and Slash", "Ação"],
       isJapanOnly: false,
+      developer: "Capcom",
+      publisher: "Capcom",
+      releaseYear: 2005,
+      summary: "O jovem caçador de demônios Dante deve escalar a gigantesca torre Temen-ni-gru para deter os planos de seu irmão gêmeo Vergil.",
+      screenshots: [
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88l1.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc88l2.jpg",
+      ],
     },
   ];
 
