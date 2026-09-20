@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createGame, updateGame, deleteGame, updateGameStatus, logoutAdmin } from "@/app/actions";
-import { Plus, Edit2, Trash2, Search, Star, LogOut, Disc, Tag, Globe, X, Image as ImageIcon, Info } from "lucide-react";
+import { createGame, updateGame, deleteGame, updateGameStatus, logoutAdmin, seedDefaultGames } from "@/app/actions";
+import { Plus, Edit2, Trash2, Search, Star, LogOut, Disc, Tag, Globe, X, Image as ImageIcon, Info, Sparkles, RefreshCw } from "lucide-react";
 import { Status } from "@prisma/client";
 
 interface Game {
@@ -268,6 +268,23 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
     return true;
   });
 
+  const [isSeeding, setIsSeeding] = useState(false);
+
+  async function handleSeed() {
+    if (confirm("Deseja popular o banco com o catálogo inicial de clássicos do PS2 (GTA, Silent Hill 2, Shadow of the Colossus, Initial D, Berserk, etc.)?")) {
+      try {
+        setIsSeeding(true);
+        await seedDefaultGames();
+        alert("Sucesso! Catálogo populado com os clássicos do PS2.");
+        window.location.reload();
+      } catch (err) {
+        alert("Erro ao popular catálogo.");
+      } finally {
+        setIsSeeding(false);
+      }
+    }
+  }
+
   return (
     <div className="space-y-8">
       {/* Barra superior de Ações do Admin */}
@@ -281,7 +298,21 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleSeed}
+            disabled={isSeeding}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60 text-xs font-semibold transition-all shadow-sm"
+            title="Adiciona os jogos clássicos do PS2 com capas, tags e screenshots"
+          >
+            {isSeeding ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            )}
+            <span>{isSeeding ? "Populando..." : "Popular Catálogo Inicial"}</span>
+          </button>
+
           <button
             onClick={handleOpenCreate}
             className="flex items-center gap-2 px-4 py-2 rounded-lg ps2-glow-button text-white text-xs font-bold"
