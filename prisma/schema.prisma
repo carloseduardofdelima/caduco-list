@@ -17,6 +17,8 @@ model Game {
   playedAt   DateTime?
   notes      String?
   platform   String    @default("PS2")
+  tags       String[]  @default([])
+  isJapanOnly Boolean   @default(false)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }

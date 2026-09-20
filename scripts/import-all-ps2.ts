@@ -27,6 +27,35 @@ async function getTwitchToken(): Promise<string> {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const GENRE_TRANSLATIONS: Record<string, string> = {
+  "Racing": "Corrida",
+  "Arcade": "Arcade",
+  "Shooter": "Tiro",
+  "Fighting": "Luta",
+  "Role-playing (RPG)": "RPG",
+  "Adventure": "Aventura",
+  "Action": "Ação",
+  "Hack and slash/Beat 'em up": "Hack and Slash",
+  "Platform": "Plataforma",
+  "Simulator": "Simulador",
+  "Sport": "Esporte",
+  "Strategy": "Estratégia",
+  "Turn-based strategy (TBS)": "Estratégia",
+  "Real Time Strategy (RTS)": "Estratégia",
+  "Tactical": "Tático",
+  "Puzzle": "Puzzle",
+  "Horror": "Terror",
+  "Survival": "Sobrevivência",
+  "Music": "Música",
+  "Visual Novel": "Visual Novel",
+  "Stealth": "Furtividade",
+  "Open world": "Mundo Aberto",
+  "Sci-fi": "Ficção Científica",
+  "Fantasy": "Fantasia",
+  "Anime": "Anime",
+  "Mecha": "Mecha",
+};
+
 async function importAllPS2Games() {
   console.log("🎮 Iniciando importação em massa de jogos de PS2 da IGDB...");
   const token = await getTwitchToken();
@@ -42,7 +71,7 @@ async function importAllPS2Games() {
 
     // 8 = PlayStation 2 na IGDB
     const query = `
-      fields id, name, cover.image_id, total_rating, first_release_date, summary;
+      fields id, name, cover.image_id, total_rating, first_release_date, summary, genres.name, themes.name, release_dates.region;
       where platforms = (8);
       sort id asc;
       limit ${limit};
@@ -83,12 +112,42 @@ async function importAllPS2Games() {
           ? new Date(game.first_release_date * 1000)
           : null;
 
+        // Extrai tags
+        const rawTags: string[] = [];
+        if (Array.isArray(game.genres)) {
+          for (const g of game.genres) {
+            if (g?.name) rawTags.push(GENRE_TRANSLATIONS[g.name] || g.name);
+          }
+        }
+        if (Array.isArray(game.themes)) {
+          for (const t of game.themes) {
+            if (t?.name && GENRE_TRANSLATIONS[t.name]) rawTags.push(GENRE_TRANSLATIONS[t.name]);
+          }
+        }
+        const tags = Array.from(new Set(rawTags));
+
+        // Detecção de Exclusivo do Japão
+        let isJapanOnly = false;
+        if (Array.isArray(game.release_dates) && game.release_dates.length > 0) {
+          const regions = game.release_dates.map((r: any) => r.region);
+          const hasJapan = regions.includes(5);
+          const hasWest = regions.some((r: number) => [1, 2, 3, 4, 8].includes(r));
+          if (hasJapan && !hasWest) {
+            isJapanOnly = true;
+          }
+        }
+        if (!isJapanOnly && /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf]/.test(game.name)) {
+          isJapanOnly = true;
+        }
+
         // Upsert para não duplicar jogos e preservar jogos que você já tenha alterado o status
         await prisma.game.upsert({
           where: { igdbId: String(game.id) },
           update: {
             title: game.name,
             coverUrl: coverUrl || undefined,
+            tags,
+            isJapanOnly,
           },
           create: {
             igdbId: String(game.id),
@@ -98,6 +157,8 @@ async function importAllPS2Games() {
             rating: null,
             notes: game.summary ? game.summary.slice(0, 500) : null,
             platform: "PS2",
+            tags,
+            isJapanOnly,
           },
         });
 

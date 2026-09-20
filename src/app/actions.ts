@@ -31,6 +31,8 @@ export async function createGame(data: {
   playedAt?: string | null;
   notes?: string | null;
   igdbId?: string | null;
+  tags?: string[];
+  isJapanOnly?: boolean;
 }) {
   const isAuth = await verifySession();
   if (!isAuth) {
@@ -47,6 +49,8 @@ export async function createGame(data: {
       notes: data.notes || null,
       igdbId: data.igdbId || null,
       platform: "PS2",
+      tags: data.tags || [],
+      isJapanOnly: data.isJapanOnly ?? false,
     },
   });
 
@@ -65,6 +69,8 @@ export async function updateGame(
     playedAt?: string | null;
     notes?: string | null;
     igdbId?: string | null;
+    tags?: string[];
+    isJapanOnly?: boolean;
   }
 ) {
   const isAuth = await verifySession();
@@ -82,6 +88,8 @@ export async function updateGame(
       playedAt: data.playedAt ? new Date(data.playedAt) : null,
       notes: data.notes || null,
       igdbId: data.igdbId || null,
+      tags: data.tags !== undefined ? data.tags : undefined,
+      isJapanOnly: data.isJapanOnly !== undefined ? data.isJapanOnly : undefined,
     },
   });
 

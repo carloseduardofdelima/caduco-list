@@ -10,6 +10,8 @@ interface GameCardProps {
     status: Status;
     rating?: number | null;
     playedAt?: Date | string | null;
+    tags?: string[];
+    isJapanOnly?: boolean;
   };
 }
 
@@ -55,6 +57,15 @@ export default function GameCard({ game }: GameCardProps) {
           </div>
         )}
 
+        {/* Badge Exclusivo Japão */}
+        {game.isJapanOnly && (
+          <div className="absolute top-2 left-2 z-10">
+            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-rose-950/90 text-rose-300 border border-rose-500/50 backdrop-blur-md shadow-lg shadow-rose-950/50">
+              <span>🇯🇵</span>
+              <span>JAPÃO</span>
+            </span>
+          </div>
+        )}
 
         {/* Badge de Status */}
         <div className="absolute top-2 right-2">
@@ -75,13 +86,34 @@ export default function GameCard({ game }: GameCardProps) {
       </div>
 
       {/* Detalhes do Jogo */}
-      <div className="p-3.5 flex flex-col flex-1 justify-between gap-2">
-        <h3 className="font-bold text-sm text-slate-100 line-clamp-1 group-hover:text-cyan-300 transition-colors">
-          {game.title}
-        </h3>
+      <div className="p-3.5 flex flex-col flex-1 justify-between gap-2.5">
+        <div>
+          <h3 className="font-bold text-sm text-slate-100 line-clamp-1 group-hover:text-cyan-300 transition-colors">
+            {game.title}
+          </h3>
 
-        <div className="flex items-center justify-between text-[11px] text-slate-400">
-          <span className="text-slate-500 font-mono">PlayStation 2</span>
+          {/* Tags do Jogo */}
+          {game.tags && game.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {game.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="text-[10px] px-1.5 py-0.2 rounded bg-slate-900/90 text-cyan-300/80 border border-cyan-900/40 font-medium"
+                >
+                  {tag}
+                </span>
+              ))}
+              {game.tags.length > 2 && (
+                <span className="text-[10px] text-slate-500 px-1 py-0.2">
+                  +{game.tags.length - 2}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/50">
+          <span className="text-slate-500 font-mono text-[10px]">PlayStation 2</span>
           {game.playedAt && (
             <div className="flex items-center gap-1 text-slate-400">
               <Calendar className="w-3 h-3 text-cyan-500" />

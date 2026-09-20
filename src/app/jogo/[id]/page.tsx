@@ -85,6 +85,19 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
               >
                 {statusInfo.label}
               </span>
+
+              {game.isJapanOnly ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-rose-950/90 text-rose-300 border border-rose-500/50 shadow-sm shadow-rose-950/40">
+                  <span>🇯🇵</span>
+                  <span>Exclusivo do Japão (NTSC-J)</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-slate-900 text-slate-300 border border-slate-800">
+                  <span>🌐</span>
+                  <span>Lançamento Internacional</span>
+                </span>
+              )}
+
               <span className="text-xs px-2.5 py-1 rounded-full bg-slate-900 text-slate-400 border border-slate-800">
                 Plataforma: {game.platform}
               </span>
@@ -93,6 +106,22 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
             <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
               {game.title}
             </h1>
+
+            {/* Tags e Gêneros */}
+            {game.tags && game.tags.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-2">
+                <span className="text-xs text-slate-400 font-medium mr-1">Tags:</span>
+                {game.tags.map((tag: string) => (
+                  <Link
+                    key={tag}
+                    href={`/?tag=${encodeURIComponent(tag)}`}
+                    className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-950/60 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400 transition-all"
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Avaliação e Data */}

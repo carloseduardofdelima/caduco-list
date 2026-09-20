@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createGame, updateGame, deleteGame, updateGameStatus, logoutAdmin } from "@/app/actions";
-import { Plus, Edit2, Trash2, Search, Star, LogOut, Disc, Check, ExternalLink } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, Star, LogOut, Disc, Tag, Globe, X } from "lucide-react";
 import { Status } from "@prisma/client";
 
 interface Game {
@@ -14,17 +14,41 @@ interface Game {
   playedAt?: string | null;
   notes?: string | null;
   igdbId?: string | null;
+  tags?: string[];
+  isJapanOnly?: boolean;
 }
 
 interface AdminDashboardClientProps {
   initialGames: Game[];
 }
 
+const POPULAR_TAGS = [
+  "Arcade",
+  "Corrida",
+  "Ação",
+  "Aventura",
+  "RPG",
+  "Terror",
+  "Luta",
+  "Hack and Slash",
+  "Tiro",
+  "Plataforma",
+  "Furtividade",
+  "Mundo Aberto",
+  "Sobrevivência",
+  "Estratégia",
+  "Esporte",
+  "Simulador",
+  "Anime",
+  "Puzzle",
+];
+
 export default function AdminDashboardClient({ initialGames }: AdminDashboardClientProps) {
   const [games, setGames] = useState<Game[]>(initialGames);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterRegion, setFilterRegion] = useState<"all" | "international" | "japan">("all");
 
   // Busca de Capas externa
   const [apiSearchTerm, setApiSearchTerm] = useState("");
@@ -39,6 +63,9 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
   const [formPlayedAt, setFormPlayedAt] = useState<string>("");
   const [formNotes, setFormNotes] = useState("");
   const [formIgdbId, setFormIgdbId] = useState("");
+  const [formTags, setFormTags] = useState<string[]>([]);
+  const [customTagInput, setCustomTagInput] = useState("");
+  const [formIsJapanOnly, setFormIsJapanOnly] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   function resetForm() {
@@ -50,6 +77,9 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
     setFormPlayedAt("");
     setFormNotes("");
     setFormIgdbId("");
+    setFormTags([]);
+    setCustomTagInput("");
+    setFormIsJapanOnly(false);
     setApiResults([]);
     setIsFormOpen(false);
   }
@@ -68,6 +98,9 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
     setFormPlayedAt(game.playedAt ? new Date(game.playedAt).toISOString().split("T")[0] : "");
     setFormNotes(game.notes || "");
     setFormIgdbId(game.igdbId || "");
+    setFormTags(game.tags || []);
+    setFormIsJapanOnly(Boolean(game.isJapanOnly));
+    setCustomTagInput("");
     setIsFormOpen(true);
   }
 
@@ -90,7 +123,30 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
     if (item.coverUrl) setFormCoverUrl(item.coverUrl);
     if (item.id) setFormIgdbId(String(item.id));
     if (item.rating && !formRating) setFormRating(String(item.rating));
+    if (Array.isArray(item.tags) && item.tags.length > 0) {
+      setFormTags(item.tags);
+    }
+    if (typeof item.isJapanOnly === "boolean") {
+      setFormIsJapanOnly(item.isJapanOnly);
+    }
     setApiResults([]);
+  }
+
+  function handleToggleTag(tag: string) {
+    if (formTags.includes(tag)) {
+      setFormTags(formTags.filter((t) => t !== tag));
+    } else {
+      setFormTags([...formTags, tag]);
+    }
+  }
+
+  function handleAddCustomTag() {
+    const trimmed = customTagInput.trim();
+    if (!trimmed) return;
+    if (!formTags.includes(trimmed)) {
+      setFormTags([...formTags, trimmed]);
+    }
+    setCustomTagInput("");
   }
 
   async function handleSaveGame(e: React.FormEvent) {
@@ -105,10 +161,12 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
         playedAt: formPlayedAt || null,
         notes: formNotes || null,
         igdbId: formIgdbId || null,
+        tags: formTags,
+        isJapanOnly: formIsJapanOnly,
       };
 
       if (editingGame) {
-        const updated = await updateGame(editingGame.id, payload);
+        await updateGame(editingGame.id, payload);
         setGames((prev) =>
           prev.map((g) => (g.id === editingGame.id ? { ...g, ...payload, id: g.id } : g))
         );
@@ -153,9 +211,18 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
     }
   }
 
-  const filteredGames = games.filter((g) =>
-    g.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredGames = games.filter((g) => {
+    const matchesSearch =
+      g.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (g.tags && g.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())));
+
+    if (!matchesSearch) return false;
+
+    if (filterRegion === "japan") return g.isJapanOnly === true;
+    if (filterRegion === "international") return !g.isJapanOnly;
+
+    return true;
+  });
 
   return (
     <div className="space-y-8">
@@ -166,7 +233,7 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
             Painel de Gerenciamento PS2
           </h1>
           <p className="text-xs text-slate-400">
-            Adicione novos jogos, consulte capas e gerencie avaliações e backlog.
+            Adicione novos jogos, consulte capas, gerencie tags e configure exclusividades do Japão.
           </p>
         </div>
 
@@ -206,12 +273,12 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
           {/* Busca de Metadados / Capa na API */}
           <div className="p-4 rounded-xl bg-blue-950/30 border border-cyan-900/40 space-y-3">
             <label className="block text-xs font-semibold text-cyan-300">
-              Buscar Informações e Capa Automaticamente
+              Buscar Informações, Capa e Tags Automaticamente
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Ex: God of War, Silent Hill 2, Shadow of the Colossus..."
+                placeholder="Ex: God of War, Initial D, Silent Hill 2, Berserk..."
                 value={apiSearchTerm}
                 onChange={(e) => setApiSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleSearchApi())}
@@ -247,9 +314,12 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
                       <Disc className="w-8 h-8 text-slate-600" />
                     )}
                     <div className="overflow-hidden">
-                      <p className="text-xs font-bold text-slate-200 truncate group-hover:text-cyan-300">
-                        {item.title}
-                      </p>
+                      <div className="flex items-center gap-1">
+                        {item.isJapanOnly && <span className="text-[10px]">🇯🇵</span>}
+                        <p className="text-xs font-bold text-slate-200 truncate group-hover:text-cyan-300">
+                          {item.title}
+                        </p>
+                      </div>
                       <span className="text-[10px] text-cyan-400">Usar estes dados</span>
                     </div>
                   </div>
@@ -258,7 +328,7 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
             )}
           </div>
 
-          <form onSubmit={handleSaveGame} className="space-y-4">
+          <form onSubmit={handleSaveGame} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
@@ -286,6 +356,114 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
                   <option value="PLAYING">Jogando Atualmente</option>
                   <option value="PLAYED">Jogado / Concluído</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Checkbox de Exclusividade do Japão */}
+            <div className="p-3.5 rounded-xl bg-slate-950/70 border border-rose-900/40 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🇯🇵</span>
+                <div>
+                  <span className="text-xs font-bold text-rose-300 block">
+                    Jogo Exclusivo do Japão (Japan Only / NTSC-J)
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Marque caso este jogo tenha sido lançado apenas no mercado japonês (sem lançamento ocidental).
+                  </span>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formIsJapanOnly}
+                  onChange={(e) => setFormIsJapanOnly(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+              </label>
+            </div>
+
+            {/* Seletor de Tags */}
+            <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-cyan-300 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5" />
+                  <span>Tags & Categorias (ex: Arcade, Corrida, RPG...)</span>
+                </label>
+                <span className="text-[10px] text-slate-500">
+                  {formTags.length} selecionada(s)
+                </span>
+              </div>
+
+              {/* Tags Atualmente Selecionadas */}
+              {formTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pb-2">
+                  {formTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-cyan-950/80 text-cyan-300 border border-cyan-500/50"
+                    >
+                      <span>#{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleTag(tag)}
+                        className="hover:text-red-400 font-bold ml-1"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Sugestões Rápidas */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] text-slate-400 block font-medium">
+                  Clique para adicionar rapidamente:
+                </span>
+                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
+                  {POPULAR_TAGS.map((tag) => {
+                    const isSelected = formTags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => handleToggleTag(tag)}
+                        className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-all ${
+                          isSelected
+                            ? "bg-cyan-500 text-black font-bold shadow-[0_0_8px_rgba(0,240,255,0.4)]"
+                            : "bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-cyan-300 border border-slate-800"
+                        }`}
+                      >
+                        {isSelected ? `✓ ${tag}` : `+ ${tag}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Campo para Adicionar Tag Customizada */}
+              <div className="flex gap-2 pt-1">
+                <input
+                  type="text"
+                  placeholder="Digitar outra tag customizada..."
+                  value={customTagInput}
+                  onChange={(e) => setCustomTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddCustomTag();
+                    }
+                  }}
+                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCustomTag}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold"
+                >
+                  Adicionar
+                </button>
               </div>
             </div>
 
@@ -366,18 +544,54 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
 
       {/* Tabela / Lista de Jogos Gerenciáveis */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Filtrar jogos..."
+              placeholder="Filtrar por nome ou tag..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400"
             />
           </div>
-          <span className="text-xs text-slate-400">Total: {filteredGames.length} jogos</span>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-lg border border-slate-800 text-xs">
+              <button
+                onClick={() => setFilterRegion("all")}
+                className={`px-2.5 py-1 rounded font-medium ${
+                  filterRegion === "all" ? "bg-cyan-500 text-black font-bold" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                onClick={() => setFilterRegion("international")}
+                className={`px-2.5 py-1 rounded font-medium ${
+                  filterRegion === "international"
+                    ? "bg-blue-600 text-white font-bold"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                🌐 Internacionais
+              </button>
+              <button
+                onClick={() => setFilterRegion("japan")}
+                className={`px-2.5 py-1 rounded font-medium ${
+                  filterRegion === "japan"
+                    ? "bg-rose-600 text-white font-bold"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                🇯🇵 Japão
+              </button>
+            </div>
+
+            <span className="text-xs text-slate-400 whitespace-nowrap">
+              Total: {filteredGames.length} jogos
+            </span>
+          </div>
         </div>
 
         <div className="overflow-x-auto rounded-xl ps2-glass border border-cyan-500/20">
@@ -385,6 +599,7 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
             <thead className="bg-slate-950/80 uppercase text-[10px] tracking-wider text-slate-400 border-b border-slate-800">
               <tr>
                 <th className="py-3 px-4">Jogo</th>
+                <th className="py-3 px-4">Região</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Nota</th>
                 <th className="py-3 px-4">Concluído em</th>
@@ -394,7 +609,7 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
             <tbody className="divide-y divide-slate-800/60">
               {filteredGames.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-slate-500">
+                  <td colSpan={6} className="text-center py-8 text-slate-500">
                     Nenhum jogo encontrado no catálogo.
                   </td>
                 </tr>
@@ -412,9 +627,43 @@ export default function AdminDashboardClient({ initialGames }: AdminDashboardCli
                         <Disc className="w-8 h-8 text-slate-600" />
                       )}
                       <div>
-                        <span className="font-bold text-white block">{game.title}</span>
-                        <span className="text-[10px] text-slate-500">PS2</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-white">{game.title}</span>
+                          {game.isJapanOnly && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-950 text-rose-300 border border-rose-600/40 font-bold">
+                              🇯🇵 JAP
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Tags */}
+                        {game.tags && game.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {game.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="text-[10px] px-1.5 py-0.2 rounded bg-slate-900 text-cyan-300/80 border border-cyan-900/40 font-mono"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      {game.isJapanOnly ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-400">
+                          <span>🇯🇵</span>
+                          <span>Japão Only</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                          <span>🌐</span>
+                          <span>Internacional</span>
+                        </span>
+                      )}
                     </td>
 
                     <td className="py-3 px-4">
