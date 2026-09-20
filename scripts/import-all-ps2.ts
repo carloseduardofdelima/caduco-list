@@ -71,7 +71,7 @@ async function importAllPS2Games() {
 
     // 8 = PlayStation 2 na IGDB
     const query = `
-      fields id, name, cover.image_id, total_rating, first_release_date, summary, genres.name, themes.name, release_dates.region;
+      fields id, name, cover.image_id, total_rating, first_release_date, summary, storyline, genres.name, themes.name, release_dates.region, release_dates.y, screenshots.image_id, involved_companies.developer, involved_companies.publisher, involved_companies.company.name;
       where platforms = (8);
       sort id asc;
       limit ${limit};
@@ -111,6 +111,33 @@ async function importAllPS2Games() {
         const playedAt = game.first_release_date
           ? new Date(game.first_release_date * 1000)
           : null;
+        const releaseYear = game.first_release_date
+          ? new Date(game.first_release_date * 1000).getFullYear()
+          : (game.release_dates?.[0]?.y || null);
+
+        // Screenshots
+        const screenshots: string[] = [];
+        if (Array.isArray(game.screenshots)) {
+          for (const s of game.screenshots) {
+            if (s?.image_id) {
+              screenshots.push(`https://images.igdb.com/igdb/image/upload/t_screenshot_big/${s.image_id}.jpg`);
+            }
+          }
+        }
+
+        // Developer e Publisher
+        let developer: string | null = null;
+        let publisher: string | null = null;
+        if (Array.isArray(game.involved_companies)) {
+          for (const item of game.involved_companies) {
+            if (item.developer && item.company?.name && !developer) {
+              developer = item.company.name;
+            }
+            if (item.publisher && item.company?.name && !publisher) {
+              publisher = item.company.name;
+            }
+          }
+        }
 
         // Extrai tags
         const rawTags: string[] = [];
@@ -148,6 +175,12 @@ async function importAllPS2Games() {
             coverUrl: coverUrl || undefined,
             tags,
             isJapanOnly,
+            summary: game.summary || undefined,
+            storyline: game.storyline || undefined,
+            developer: developer || undefined,
+            publisher: publisher || undefined,
+            releaseYear: releaseYear || undefined,
+            screenshots: screenshots.length > 0 ? screenshots : undefined,
           },
           create: {
             igdbId: String(game.id),
@@ -155,10 +188,16 @@ async function importAllPS2Games() {
             coverUrl,
             status: "BACKLOG",
             rating: null,
-            notes: game.summary ? game.summary.slice(0, 500) : null,
+            notes: null,
             platform: "PS2",
             tags,
             isJapanOnly,
+            summary: game.summary || null,
+            storyline: game.storyline || null,
+            developer,
+            publisher,
+            releaseYear,
+            screenshots,
           },
         });
 
