@@ -216,8 +216,11 @@ export const CURATED_PS2_DETAILS: Record<string, Partial<GameDetailsResult>> = {
     tags: ["Luta", "Arcade"],
     isJapanOnly: false,
     screenshots: [
-      "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc81v1.jpg",
-      "https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc81v2.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_screenshot_big/misxpmknrvyjaqlt6mnj.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_screenshot_big/ge4zst8ymicxvjmpd6wy.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_screenshot_big/pij5pfkri23jamnnzyle.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_screenshot_big/grxzzbxsaoytpga71hvk.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_screenshot_big/w55bsqtnm05oolqspsgu.jpg",
     ],
   },
   "devil may cry 3: dante's awakening": {
@@ -407,18 +410,10 @@ export async function searchIGDBGames(query: string) {
 }
 
 export async function getGameExtraInfo(title: string, igdbId?: string | null): Promise<Partial<GameDetailsResult>> {
-  // 1. Verifica no catálogo curado local
-  const cleanTitle = title.trim().toLowerCase();
-  for (const [key, details] of Object.entries(CURATED_PS2_DETAILS)) {
-    if (cleanTitle === key || cleanTitle.includes(key) || key.includes(cleanTitle)) {
-      return details;
-    }
-  }
-
-  // 2. Se IGDB estiver configurada, tenta buscar detalhes ricos
   const clientId = process.env.TWITCH_CLIENT_ID;
   const clientSecret = process.env.TWITCH_CLIENT_SECRET;
 
+  // 1. Se IGDB estiver configurada, busca os detalhes 100% autênticos da API da IGDB
   if (clientId && clientSecret) {
     const token = await getTwitchAppToken(clientId, clientSecret);
     if (token) {
@@ -458,6 +453,14 @@ export async function getGameExtraInfo(title: string, igdbId?: string | null): P
       } catch (err) {
         console.error("Erro ao buscar detalhes avançados na IGDB:", err);
       }
+    }
+  }
+
+  // 2. Fallback somente se a API estiver inacessível
+  const cleanTitle = title.trim().toLowerCase();
+  for (const [key, details] of Object.entries(CURATED_PS2_DETAILS)) {
+    if (cleanTitle === key || cleanTitle.includes(key) || key.includes(cleanTitle)) {
+      return details;
     }
   }
 
