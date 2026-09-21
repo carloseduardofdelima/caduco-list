@@ -323,19 +323,19 @@ function parseIGDBGame(game: any): GameDetailsResult {
     isJapanOnly = true;
   }
 
-  // Extrai Screenshots
+  // Extrai Screenshots em alta resolução (Full HD / 1080p)
   const screenshots: string[] = [];
   if (Array.isArray(game.screenshots)) {
     for (const s of game.screenshots) {
       if (s?.image_id) {
-        screenshots.push(`https://images.igdb.com/igdb/image/upload/t_screenshot_big/${s.image_id}.jpg`);
+        screenshots.push(`https://images.igdb.com/igdb/image/upload/t_1080p/${s.image_id}.jpg`);
       }
     }
   }
   if (screenshots.length === 0 && Array.isArray(game.artworks)) {
     for (const a of game.artworks) {
       if (a?.image_id) {
-        screenshots.push(`https://images.igdb.com/igdb/image/upload/t_screenshot_big/${a.image_id}.jpg`);
+        screenshots.push(`https://images.igdb.com/igdb/image/upload/t_1080p/${a.image_id}.jpg`);
       }
     }
   }

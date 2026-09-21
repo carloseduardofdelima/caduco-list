@@ -15,6 +15,7 @@ import {
 import { Status } from "@prisma/client";
 import ScreenshotGallery from "@/components/ScreenshotGallery";
 import { getGameExtraInfo } from "@/lib/igdb";
+import { getGameGifs } from "@/lib/gif";
 
 interface GameDetailPageProps {
   params: Promise<{ id: string }>;
@@ -57,16 +58,24 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     notFound();
   }
 
-  // Busca dados adicionais se ainda não existirem no banco
+  // Busca dados adicionais e GIFs de gameplay dinamicamente em paralelo
   let extraInfo: any = {};
   const hasScreenshots = Array.isArray(game.screenshots) && game.screenshots.length > 0;
-  if (!hasScreenshots || !game.summary || !game.developer) {
-    try {
-      extraInfo = await getGameExtraInfo(game.title, game.igdbId);
-    } catch (e) {
-      console.warn("Aviso ao buscar detalhes adicionais do jogo:", e);
-    }
-  }
+
+  const [extraInfoResult, gifs] = await Promise.all([
+    !hasScreenshots || !game.summary || !game.developer
+      ? getGameExtraInfo(game.title, game.igdbId).catch((e) => {
+          console.warn("Aviso ao buscar detalhes adicionais do jogo:", e);
+          return {};
+        })
+      : Promise.resolve({}),
+    getGameGifs(game.title).catch((e) => {
+      console.warn("Aviso ao buscar GIFs do jogo:", e);
+      return [];
+    }),
+  ]);
+
+  extraInfo = extraInfoResult || {};
 
   const screenshots = hasScreenshots
     ? game.screenshots
@@ -80,7 +89,8 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
   const releaseYear = game.releaseYear || extraInfo.releaseYear || null;
 
   const statusInfo = statusConfig[game.status as Status];
-  const backdropImage = screenshots.length > 0 ? screenshots[0] : null;
+  const backdropImage =
+    screenshots.length > 0 ? screenshots[0] : gifs.length > 0 ? gifs[0] : null;
 
   return (
     <div className="relative space-y-8 max-w-5xl mx-auto">
@@ -240,9 +250,13 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
             </div>
           )}
 
-          {/* Galeria de Screenshots */}
-          {screenshots.length > 0 && (
-            <ScreenshotGallery screenshots={screenshots} gameTitle={game.title} />
+          {/* Galeria de Screenshots e GIFs de Gameplay */}
+          {(screenshots.length > 0 || gifs.length > 0) && (
+            <ScreenshotGallery
+              screenshots={screenshots}
+              gifs={gifs}
+              gameTitle={game.title}
+            />
           )}
 
           {/* Avaliação e Data da Gameplay */}
