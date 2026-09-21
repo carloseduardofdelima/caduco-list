@@ -71,7 +71,7 @@ async function importAllPS2Games() {
 
     // 8 = PlayStation 2 na IGDB
     const query = `
-      fields id, name, cover.image_id, total_rating, first_release_date, summary, storyline, genres.name, themes.name, release_dates.region, release_dates.y, screenshots.image_id, involved_companies.developer, involved_companies.publisher, involved_companies.company.name;
+      fields id, name, cover.image_id, total_rating, first_release_date, summary, storyline, genres.name, themes.name, game_modes.name, release_dates.region, release_dates.y, screenshots.image_id, involved_companies.developer, involved_companies.publisher, involved_companies.company.name;
       where platforms = (8);
       sort id asc;
       limit ${limit};
@@ -151,7 +151,25 @@ async function importAllPS2Games() {
             if (t?.name && GENRE_TRANSLATIONS[t.name]) rawTags.push(GENRE_TRANSLATIONS[t.name]);
           }
         }
-        const tags = Array.from(new Set(rawTags));
+        if (Array.isArray(game.game_modes)) {
+          const MODE_MAP: Record<string, string> = {
+            "Single player": "Singleplayer",
+            "Multiplayer": "Multiplayer",
+            "Co-operative": "Co-op",
+            "Split screen": "Split-screen",
+            "Massively Multiplayer Online (MMO)": "MMO",
+          };
+          for (const m of game.game_modes) {
+            if (m?.name && MODE_MAP[m.name]) rawTags.push(MODE_MAP[m.name]);
+          }
+        }
+        let tags = Array.from(new Set(rawTags));
+        const hasMulti = tags.some((t) => ["Multiplayer", "Co-op", "Split-screen", "MMO"].includes(t));
+        if (hasMulti) {
+          tags = tags.filter((t) => t !== "Singleplayer");
+        } else if (!tags.includes("Singleplayer")) {
+          tags.push("Singleplayer");
+        }
 
         // Detecção de Exclusivo do Japão
         let isJapanOnly = false;

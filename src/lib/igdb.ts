@@ -289,7 +289,25 @@ function parseIGDBGame(game: any): GameDetailsResult {
       }
     }
   }
-  const tags = Array.from(new Set(rawTags));
+  if (Array.isArray(game.game_modes)) {
+    const MODE_MAP: Record<string, string> = {
+      "Single player": "Singleplayer",
+      "Multiplayer": "Multiplayer",
+      "Co-operative": "Co-op",
+      "Split screen": "Split-screen",
+      "Massively Multiplayer Online (MMO)": "MMO",
+    };
+    for (const m of game.game_modes) {
+      if (m?.name && MODE_MAP[m.name]) rawTags.push(MODE_MAP[m.name]);
+    }
+  }
+  let tags = Array.from(new Set(rawTags));
+  const hasMulti = tags.some((t) => ["Multiplayer", "Co-op", "Split-screen", "MMO"].includes(t));
+  if (hasMulti) {
+    tags = tags.filter((t) => t !== "Singleplayer");
+  } else if (!tags.includes("Singleplayer")) {
+    tags.push("Singleplayer");
+  }
 
   // Detecta se saiu exclusivamente no Japão
   let isJapanOnly = false;
@@ -381,7 +399,7 @@ export async function searchIGDBGames(query: string) {
   try {
     const queryBody = `
       search "${query.replace(/"/g, '\\"')}";
-      fields name, cover.image_id, cover.url, total_rating, first_release_date, summary, storyline, platforms, genres.name, themes.name, release_dates.region, release_dates.y, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, screenshots.image_id, artworks.image_id, videos.video_id;
+      fields name, cover.image_id, cover.url, total_rating, first_release_date, summary, storyline, platforms, genres.name, themes.name, game_modes.name, release_dates.region, release_dates.y, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, screenshots.image_id, artworks.image_id, videos.video_id;
       where platforms = (8);
       limit 10;
     `;
@@ -421,14 +439,14 @@ export async function getGameExtraInfo(title: string, igdbId?: string | null): P
         let queryBody = "";
         if (igdbId && !isNaN(Number(igdbId))) {
           queryBody = `
-            fields name, cover.image_id, cover.url, total_rating, first_release_date, summary, storyline, platforms, genres.name, themes.name, release_dates.region, release_dates.y, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, screenshots.image_id, artworks.image_id, videos.video_id;
+            fields name, cover.image_id, cover.url, total_rating, first_release_date, summary, storyline, platforms, genres.name, themes.name, game_modes.name, release_dates.region, release_dates.y, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, screenshots.image_id, artworks.image_id, videos.video_id;
             where id = ${igdbId};
             limit 1;
           `;
         } else {
           queryBody = `
             search "${title.replace(/"/g, '\\"')}";
-            fields name, cover.image_id, cover.url, total_rating, first_release_date, summary, storyline, platforms, genres.name, themes.name, release_dates.region, release_dates.y, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, screenshots.image_id, artworks.image_id, videos.video_id;
+            fields name, cover.image_id, cover.url, total_rating, first_release_date, summary, storyline, platforms, genres.name, themes.name, game_modes.name, release_dates.region, release_dates.y, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, screenshots.image_id, artworks.image_id, videos.video_id;
             where platforms = (8);
             limit 1;
           `;

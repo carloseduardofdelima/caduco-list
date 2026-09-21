@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import GameCard from "@/components/GameCard";
-import { Gamepad2, Search, Tag, Globe, X } from "lucide-react";
+import TagFilterBar from "@/components/TagFilterBar";
+import { Gamepad2, Search, Globe, X } from "lucide-react";
 import Link from "next/link";
 import { Status } from "@prisma/client";
 
@@ -153,16 +154,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   return (
     <div className="space-y-8">
       {/* Seletor de Região (Exclusivos do Japão vs Internacionais) */}
-      <section className="p-1.5 rounded-2xl ps2-glass border border-cyan-500/20 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs font-bold text-slate-400 px-3 flex items-center gap-1.5">
+      <section className="p-1.5 rounded-2xl ps2-glass border border-cyan-500/20 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1.5 flex-nowrap sm:flex-wrap">
+          <span className="text-xs font-bold text-slate-400 px-2 sm:px-3 flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
             <Globe className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Região:</span>
+            <span className="hidden xs:inline">Região:</span>
           </span>
 
           <Link
             href={buildFilterUrl({ region: "all" })}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${
               activeRegion === "all"
                 ? "bg-cyan-500 text-black shadow-[0_0_15px_rgba(0,240,255,0.4)]"
                 : "bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800"
@@ -173,7 +174,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
           <Link
             href={buildFilterUrl({ region: "international" })}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${
               activeRegion === "international"
                 ? "bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]"
                 : "bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800"
@@ -185,14 +186,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
           <Link
             href={buildFilterUrl({ region: "japan" })}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${
               activeRegion === "japan"
                 ? "bg-rose-600 text-white shadow-[0_0_15px_rgba(225,29,72,0.4)]"
                 : "bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800"
             }`}
           >
             <span>🇯🇵</span>
-            <span>Exclusivos do Japão ({counts.japan})</span>
+            <span>Exclusivos Japão ({counts.japan})</span>
           </Link>
         </div>
 
@@ -273,49 +274,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {/* Barra de Filtro de Tags */}
       {availableTags.length > 0 && (
-        <section className="space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-            <Tag className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Filtrar por Gênero & Tag:</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none flex-wrap">
-            <Link
-              href={buildFilterUrl({ tag: null })}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-                !activeTag
-                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/50"
-                  : "bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800"
-              }`}
-            >
-              Todas as Tags
-            </Link>
-
-            {availableTags.map((tag) => {
-              const isSelected = activeTag.toLowerCase() === tag.name.toLowerCase();
-              return (
-                <Link
-                  key={tag.name}
-                  href={buildFilterUrl({ tag: isSelected ? null : tag.name })}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                    isSelected
-                      ? "bg-cyan-500 text-black font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)] border border-cyan-400"
-                      : "bg-slate-900/80 text-slate-300 hover:bg-slate-800 hover:text-cyan-300 border border-slate-800"
-                  }`}
-                >
-                  <span>#{tag.name}</span>
-                  <span
-                    className={`text-[10px] px-1 rounded ${
-                      isSelected ? "bg-black/30 text-black font-bold" : "bg-slate-800 text-slate-400"
-                    }`}
-                  >
-                    {tag.count}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
+        <TagFilterBar
+          availableTags={availableTags}
+          activeTag={activeTag}
+          totalGamesCount={totalCount}
+        />
       )}
 
       {/* Grid de Jogos */}
