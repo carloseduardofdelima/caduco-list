@@ -1,26 +1,14 @@
 import Link from "next/link";
-import { Gamepad2, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import PS2Logo from "@/components/PS2Logo";
 
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 ps2-glass border-b border-cyan-950/40">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
         {/* Logo & Marca */}
-        <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-900/60 border border-cyan-500/40 flex items-center justify-center text-cyan-400 group-hover:border-cyan-400 group-hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] transition-all flex-shrink-0">
-            <Gamepad2 className="w-4 h-4 sm:w-6 sm:h-6" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="font-extrabold text-base sm:text-lg tracking-wider text-white whitespace-nowrap">
-                PS2<span className="text-cyan-400 font-mono">.ARCHIVE</span>
-              </span>
-              <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-blue-950/80 text-cyan-300 border border-blue-800/60 whitespace-nowrap">
-                PlayStation 2
-              </span>
-            </div>
-            <p className="hidden sm:block text-xs text-slate-400 truncate">Coleção & Registro de Jogos</p>
-          </div>
+        <Link href="/" className="min-w-0">
+          <PS2Logo size="sm" />
         </Link>
 
         {/* Links e Botão Admin */}

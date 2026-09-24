@@ -4,7 +4,7 @@ import { useState } from "react";
 import { loginAdmin } from "@/app/actions";
 import { Lock, ShieldAlert, KeyRound } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-
+import PS2Logo from "@/components/PS2Logo";
 import { Suspense } from "react";
 
 function AdminLoginForm() {
@@ -38,9 +38,12 @@ function AdminLoginForm() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center">
       <div className="w-full max-w-md p-8 rounded-2xl ps2-glass border border-cyan-500/30 space-y-6">
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-xl bg-blue-950/80 border border-cyan-400/40 mx-auto flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
-            <Lock className="w-6 h-6" />
+        <div className="text-center space-y-3">
+          <div className="flex justify-center pb-2">
+            <PS2Logo size="sm" showSubtitle={false} />
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-blue-950/80 border border-cyan-400/40 mx-auto flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
+            <Lock className="w-5 h-5" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
             Acesso Restrito
